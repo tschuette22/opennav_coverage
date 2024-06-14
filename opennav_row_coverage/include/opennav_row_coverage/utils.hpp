@@ -23,6 +23,11 @@
 #include "tinyxml2.h" // NOLINT
 #include "opennav_coverage/types.hpp"
 #include "opennav_row_coverage/types.hpp"
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+
 
 namespace opennav_row_coverage
 {
@@ -166,6 +171,32 @@ inline Rows parseRows(const std::string & file_path, const bool reorder = false)
 
   return rows;
 }
+
+
+/**
+ * @brief transformCoveragePath Transforms a path from one frame to another
+ * @param path The path to transform
+ * @param transform The transform to apply
+ * 
+ * @return The transformed path
+ */
+inline nav_msgs::msg::Path transformCoveragePath(const nav_msgs::msg::Path & path, geometry_msgs::msg::TransformStamped transform)
+{
+  // Create a new path message
+  nav_msgs::msg::Path transformed_path;
+  transformed_path.header.frame_id = transform.child_frame_id;
+  transformed_path.header.stamp = path.header.stamp;
+
+  // Transform each pose in the path
+  for (const auto & pose : path.poses) {
+    geometry_msgs::msg::PoseStamped transformed_pose;
+    tf2::doTransform(pose, transformed_pose, transform);
+    transformed_path.poses.push_back(transformed_pose);
+  }
+
+  return transformed_path;
+}
+
 
 }  // namespace util
 

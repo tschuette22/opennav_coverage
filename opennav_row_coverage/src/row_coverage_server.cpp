@@ -65,6 +65,8 @@ RowCoverageServer::on_configure(const rclcpp_lifecycle::State & /*state*/)
     nullptr,
     std::chrono::milliseconds(500),
     true, server_options);
+  tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+  tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
   return nav2_util::CallbackReturn::SUCCESS;
 }
@@ -215,6 +217,10 @@ void RowCoverageServer::computeCoveragePath()
           opennav_coverage::util::toCoveragePathMsg(path, master_field, header, cartesian_frame_);
         result->nav_path = opennav_coverage::util::toNavPathMsg(
           path, master_field, header, cartesian_frame_, path_gen_->getTurnPointDistance());
+         RCLCPP_INFO(
+          get_logger(),
+          "Generated coverage path with %li poses.", result->nav_path.poses.size());
+
       } else {
         result->coverage_path =
           opennav_coverage::util::toCoveragePathMsg(
@@ -226,14 +232,20 @@ void RowCoverageServer::computeCoveragePath()
         swaths, master_field, false, header, cartesian_frame_);
     }
 
+    // transform the path from utm to map frame
+    tf_transform_ = tf_buffer_ -> lookupTransform("map", header.frame_id, tf2::TimePointZero, tf2::durationFromSec(1.0) );
+
+    RCLCPP_INFO(get_logger(), "Transforming path from %s to map frame, translation.x: %f", header.frame_id.c_str(), tf_transform_.transform.translation.x);
+    result->nav_path = util::transformCoveragePath(result->nav_path, tf_transform_);
+
+
     auto cycle_duration = this->now() - start_time;
     result->planning_time = cycle_duration;
 
     // Visualize in Cartesian coordinates for debugging
     visualizer_->visualize(
       field, Field() /*No headland field for row coverage*/, master_field.getRefPoint(),
-      opennav_coverage::util::toCartesianNavPathMsg(
-        path, header, path_gen_->getTurnPointDistance()), swaths, header);
+      result -> nav_path, swaths, header); // result -> nav_path opennav_coverage::util::toCartesianNavPathMsg(path, header, path_gen_->getTurnPointDistance())
     action_server_->succeeded_current(result);
   } catch (CoverageException & e) {
     RCLCPP_ERROR(get_logger(), "Invalid mode set: %s", e.what());

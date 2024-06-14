@@ -21,7 +21,7 @@
 namespace opennav_coverage
 {
 
-const std::string GLOBAL_FRAME = "map";  // NOLINT
+const std::string GLOBAL_FRAME = "EPSG:4258";  // NOLINT
 
 void Visualizer::deactivate()
 {
@@ -41,13 +41,14 @@ void Visualizer::visualize(
 
   // Visualize coverage path
   if (nav_plan_pub_->get_subscription_count() > 0 && nav_path.poses.size() > 0) {
-    auto utm_path = std::make_unique<nav_msgs::msg::Path>(nav_path);
-    utm_path->header.frame_id = GLOBAL_FRAME;
-    for (unsigned int i = 0; i != utm_path->poses.size(); i++) {
-      utm_path->poses[i].pose.position.x += ref_pt.getX();
-      utm_path->poses[i].pose.position.y += ref_pt.getY();
-    }
-    nav_plan_pub_->publish(std::move(utm_path));
+    // auto utm_path = std::make_unique<nav_msgs::msg::Path>(nav_path);
+    // utm_path->header.frame_id = GLOBAL_FRAME;
+    // for (unsigned int i = 0; i != utm_path->poses.size(); i++) {
+    //   utm_path->poses[i].pose.position.x += ref_pt.getX();
+    //   utm_path->poses[i].pose.position.y += ref_pt.getY();
+    // }
+    // nav_plan_pub_->publish(std::move(utm_path));
+    nav_plan_pub_->publish(nav_path);
   }
 
   // Visualize field boundary

@@ -28,6 +28,10 @@
 #include "opennav_coverage/route_generator.hpp"
 #include "opennav_coverage/path_generator.hpp"
 #include "opennav_coverage/visualizer.hpp"
+#include "tf2_ros/transform_listener.h"
+#include "tf2_ros/buffer.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+
 
 namespace opennav_row_coverage
 {
@@ -126,7 +130,12 @@ protected:
   std::unique_ptr<opennav_coverage::RouteGenerator> route_gen_;
   std::unique_ptr<opennav_coverage::PathGenerator> path_gen_;
   std::unique_ptr<opennav_coverage::Visualizer> visualizer_;
+  std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+  geometry_msgs::msg::TransformStamped tf_transform_;
+
   bool cartesian_frame_, order_ids_;
+
 };
 
 }  // namespace opennav_row_coverage
