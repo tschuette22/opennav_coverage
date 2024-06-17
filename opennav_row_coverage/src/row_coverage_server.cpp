@@ -237,6 +237,7 @@ void RowCoverageServer::computeCoveragePath()
 
     RCLCPP_INFO(get_logger(), "Transforming path from %s to map frame, translation.x: %f", header.frame_id.c_str(), tf_transform_.transform.translation.x);
     result->nav_path = util::transformCoveragePath(result->nav_path, tf_transform_);
+    result->nav_path.header.frame_id = "map";
 
 
     auto cycle_duration = this->now() - start_time;
