@@ -191,6 +191,7 @@ inline nav_msgs::msg::Path transformCoveragePath(const nav_msgs::msg::Path & pat
   for (const auto & pose : path.poses) {
     geometry_msgs::msg::PoseStamped transformed_pose;
     tf2::doTransform(pose, transformed_pose, transform);
+    transformed_pose.pose.position.z = 0.0;
     transformed_path.poses.push_back(transformed_pose);
   }
 
